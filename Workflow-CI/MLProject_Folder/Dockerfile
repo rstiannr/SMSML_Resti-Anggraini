@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 5001
 
-CMD ["mlflow", "models", "serve", "-m", "model_final", "-h", "0.0.0.0", "-p", "5001", "--no-conda"]
+CMD ["mlflow", "models", "serve", "-m", "model_final/model", "-h", "0.0.0.0", "-p", "5001", "--no-conda"]

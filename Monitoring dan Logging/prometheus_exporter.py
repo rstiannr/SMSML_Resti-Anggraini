@@ -2,24 +2,34 @@ import time
 import requests
 import uvicorn
 from fastapi import FastAPI, Request
-from prometheus_client import Counter, Histogram, generate_latest
+from prometheus_client import (
+    Counter,
+    Histogram,
+    Gauge,
+    generate_latest
+)
 from fastapi.responses import Response
 
 app = FastAPI()
 
-HTTP_REQUEST_TOTAL = Counter('http_requests_total', 'Total HTTP Requests')
-PREDICTION_TOTAL = Counter('model_predictions_total',
-                           'Total Model Predictions')
-PREDICTION_LATENCY = Histogram('model_prediction_latency_seconds',
-                               'Time for prediction')
-ERROR_COUNT = Counter('api_errors_total', 'Total API Errors')
-
-PRED_COUNTS = {
-    0: Counter('pred_label_0_total', 'Total Label 0'),
-    1: Counter('pred_label_1_total', 'Total Label 1'),
-    2: Counter('pred_label_2_total', 'Total Label 2'),
-    3: Counter('pred_label_3_total', 'Total Label 3')
-}
+HTTP_REQUEST_TOTAL = Counter(
+    'http_requests_total', 'Total HTTP Requests'
+)
+ERROR_COUNT = Counter(
+    'api_errors_total', 'Total API Errors'
+)
+PREDICTION_LATENCY = Histogram(
+    'model_prediction_latency_seconds', 'Prediction latency'
+)
+PREDICTION_TOTAL = Counter(
+    'model_predictions_total', 'Total Model Predictions'
+)
+PRED_LABEL_COUNTS = Counter(
+    'model_prediction_labels', 'Labels count', ['label']
+)
+CURRENT_PREDICTION_VALUE = Gauge(
+    'current_prediction_label', 'Last prediction label'
+)
 
 
 @app.get("/metrics")
@@ -34,28 +44,30 @@ async def predict(request: Request):
 
     try:
         data = await request.json()
-
-        model_url = "http://127.0.0.1:5000/invocations"
+        model_url = "http://127.0.0.1:5001/invocations"
 
         response = requests.post(model_url, json=data)
         response.raise_for_status()
 
         result = response.json()
 
-        prediction_value = (result[0] if isinstance(result, list)
-                            else result['predictions'][0])
+        if isinstance(result, dict) and 'predictions' in result:
+            prediction = result['predictions'][0]
+        elif isinstance(result, list):
+            prediction = result[0]
+        else:
+            prediction = result
 
         PREDICTION_TOTAL.inc()
+        PRED_LABEL_COUNTS.labels(label=str(prediction)).inc()
+        CURRENT_PREDICTION_VALUE.set(prediction)
         PREDICTION_LATENCY.observe(time.time() - start_time)
 
-        if prediction_value in PRED_COUNTS:
-            PRED_COUNTS[prediction_value].inc()
-
-        return {"prediction": prediction_value}
+        return result
 
     except Exception as e:
         ERROR_COUNT.inc()
-        return {"error": str(e)}
+        return {"error": str(e)}, 500
 
 
 if __name__ == "__main__":
