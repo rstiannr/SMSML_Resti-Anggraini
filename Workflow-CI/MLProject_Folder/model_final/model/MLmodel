@@ -1,0 +1,27 @@
+artifact_path: model
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.13.5
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.8.0
+mlflow_version: 2.19.0
+model_size_bytes: 5785
+model_uuid: 97d2d624002647cf8c4fbaa9002f1d20
+run_id: b1c014981b8e4762b02ff3cef0759c51
+signature:
+  inputs: '[{"type": "double", "name": "Avg_Sales", "required": true}, {"type": "double",
+    "name": "Std_Dev", "required": true}, {"type": "long", "name": "Max_Sales", "required":
+    true}, {"type": "double", "name": "CV", "required": true}, {"type": "double",
+    "name": "UnitPrice", "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "int64", "shape": [-1]}}]'
+  params: null
+utc_time_created: '2025-12-23 05:21:33.651307'
