@@ -27,15 +27,16 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pandas scikit-learn numpy matplotlib seaborn mlflow==2.19.0 dagshub dagshub
+        pip install pandas scikit-learn numpy matplotlib seaborn mlflow==2.19.0 dagshub psutil
 
-    - name: Run training script
-      # Mengikuti pola sukses teman Anda dengan menjalankan langsung di folder terkait
+    - name: Run MLflow Project
       working-directory: ./MLProject_Folder
-      run: python modelling.py
+      run: |
+        mlflow run . \
+          --env-manager local \
+          --experiment-name "Retail_Classification_Advanced"
 
     - name: Get latest MLflow run_id
-      # Langkah ini penting untuk mengambil RUN_ID secara otomatis demi proses Docker
       id: get_run_id
       run: |
         python - <<EOF
@@ -43,7 +44,7 @@ jobs:
         import os
         try:
             # Mencari run terakhir dari eksperimen
-            runs = mlflow.search_runs(experiment_names=["Retail_Product_Classification_Basic"], order_by=["start_time DESC"])
+            runs = mlflow.search_runs(experiment_names=["Retail_Classification_Advanced"], order_by=["start_time DESC"])
             if not runs.empty:
                 run_id = runs.iloc[0].run_id
                 with open(os.environ['GITHUB_ENV'], 'a') as f:

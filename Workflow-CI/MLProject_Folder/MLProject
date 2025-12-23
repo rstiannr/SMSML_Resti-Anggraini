@@ -1,4 +1,4 @@
-name: Retail_Classification_CI
+name: Retail-Product-Classification
 
 conda_env: conda.yaml
 
